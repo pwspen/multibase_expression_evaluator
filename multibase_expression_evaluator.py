@@ -84,8 +84,7 @@ def intparse(n): # Converts int_frombase (str) to int_10 (float)
         digit = digequiv36.index(n[i]) # Looks up numerical value of digit
         num += digit * (frombase**(leng-i-1)) # Multiplies numerical value of digit by the current digit-place "multiplier" (ex, _00, multiplier is 100) and adds it to resultant float
         if digit >= frombase: # Error handling, user should not input digit higher than the current base 
-            if p == 1: # Doesn't print if hidden less prints option is enabled
-                print('Cannot calculate - digit higher than base present') # Informs user
+            print('Error - digit higher than base present. Raise input base with /b. Result very likely incorrect.') # Informs user
             return False # Causes main function to halt
     return float(num) # Returns resulting float
 
@@ -100,8 +99,7 @@ def floparse(n): # Converts float_frombase (str) to float_10 (float)
         digit = digequiv36.index(decim[i]) # Looks up numerical value of digit
         decim_10 += digit / frombase**(i+1) # Divides numerical value of digit by current digit-place "multiplier"
         if digit >= frombase: # Error handling, user should not input digit higher than the current base
-            if p == 1: # Doesn't print if hidden less prints option is enabled
-                print('Cannot calculate - digit higher than base present') # Informs user
+            print('Error - digit higher than base present. Raise input base with /b. Result very likely incorrect.') # Informs user
             return False # Causes main function to halt
     return float(integ + decim_10) # Returns resulting float
 
@@ -123,6 +121,7 @@ def numtobase(n): # Converts int_10 or float_10 to int_tobase or float_tobase
 
 operators = ["(",")","^","*","/","+","-"]
 # The operator library is used to test when something is a number or an operator, and is not used the same way the digit library is where the index of a digit is important.
+
 
 def EMDAS(flist): # Evaluates expression until it is of length 1, then prints it
         iters = 0 # Iteration loop counter
@@ -155,11 +154,12 @@ def EMDAS(flist): # Evaluates expression until it is of length 1, then prints it
             elif iters > 500: # If iterations is above 500 (evaluating massive expressions is not the purpose of this program)
                 raise
 
-def eq(): # "Solver" function. Evaluates result of input expression.
+def eq(inp): # "Solver" function. Evaluates result of input expression.
+    def float_to_str(n):
+            return n if type(n) != float else str(int(n)) if str(int(n)) + '.0' == str(float(n)) else (str(float(n)))
     num = '' # List of digits of current number being recorded
     eq_list = [] # Expression list
-    print('Expression:') # Asks for expression
-    eq = list(str(input('')).upper().replace(" ", "")) # Accepts and sanitizes input (changes all letters to uppercase, removes all whitespace, turns into list)
+    eq = list(str(inp).upper().replace(" ", "")) # Accepts and sanitizes input (changes all letters to uppercase, removes all whitespace, turns into list)
     for i in range(len(eq)): # For each digit in expression list
         if eq[i] in digequiv36 or eq[i] == '.': # If digit is a number or .
             num += eq[i] # Add digit to current number being recorded
@@ -170,8 +170,8 @@ def eq(): # "Solver" function. Evaluates result of input expression.
             eq_list.append(eq[i]) # Append operator to expression list
         elif i == len(eq) - 1: # If digit is not operator and last digit of input list
             eq_list.append(numparse(num)) # Append recorded number to expression list
-    if base10disp == 'ON' and p == 1: # If print base10 calculations is on and print less mode is off
-        print('                              = ',' '.join([str(x) for x in eq_list])) # Print initial expression list in base10
+    if base10disp == 'ON' and inp != '': # If print base10 calculations is on
+        print('                              B10 = ',' '.join([float_to_str(x) for x in eq_list])) # Print initial expression list in base10
     iters2 = 0 # Expression list iterations
     while len(eq_list) != 1: # While expression list is longer than 1
         if ("(" in eq_list) and (")" in eq_list): # If there are both parentheses in expression list
@@ -196,78 +196,117 @@ def eq(): # "Solver" function. Evaluates result of input expression.
         iters2 +=1 # Increment iterations
     print('= ',numtobase(eq_list[0]),end ='') # Prints result of expression list
     if base10disp == 'ON' and p == 1: # If base10 prints are turned on
-        print('                              = ',eq_list[0]) # Prints result in base10
+        print('                              B10 = ',float_to_str(eq_list[0])) # Prints result in base10
     print('\n')
 
 
 def basechange():
     global frombase
     global tobase
-    success = 0 # Has base assignment been completed yet
-    while success == 0: # If it has not
-        try: 
-            base1(int(input("Type input base in base10: "))) # Attempts to assign 'from' base
-            success = 1 # Success
-        except:
-            print('Invalid base entered, try again')
+   
+    try: 
+        inp = input("Type input (typed) base in base10: \nInput base > ").replace(" ", "")
+        base1(int(inp)) # Attempts to assign 'to' base
+    except:
+        if inp == '':
+            print('Input base unchanged.')
+        else:
+            print('Invalid base entered, input base unchanged.')
     if frombase > 36: # If user tries to set from base above 36
-        print('Input only supported up to base36.')
+        print('Input only supported up to base36. Input base set to 36.')
         frombase = 36
-    success = 0
-    while success == 0:
-        try:
-            base2(int(input("Type output base in base10: "))) # Attempts to assign 'to' base
-            success = 1 # Success
-        except:
-            print('Invalid base entered, try again')
+
+    try:
+        inp = input("Type output (printed) base in base10: \nOutput base > ").replace(" ", "")
+        base2(int(inp)) # Attempts to assign 'to' base
+    except:
+        if inp == '':
+            print('Output base unchanged.')
+        else:
+            print('Invalid base entered, output base unchanged.')
     if tobase > 36 and bigcharlib =='B36': # If big base mode is disabled and output is set higher than 36
-        print('Output only supported up to base36. Change size of character library in settings to increase to base112.')
+        print('Output only supported up to base36 with current settings. Output base set to 36. /s -> /2 to increase maximum base to 112.')
         tobase = 36 # Reset output down to 36
     if tobase > 112 and bigcharlib == 'B112': # If big base mode is enabled and output is set higher than 112
-        print('Output only supported up to base112.')
+        print('Output only supported up to base112. Output base set to 112.')
         tobase = 112 # Reset output down to 112
+
+#input('')).upper().replace(" ", ""))
 
 base12(36,36) # Sets default bases to input 36 and output 36
 base10disp = 'OFF' # Disables printing of base10 calculations by default
-bigcharlib = 'B36' # Disables "big base mode" by default
+bigcharlib = '36' # Disables "big base mode" by default
+def helpme():
+    print(' ')
+    print('To evaluate an expression or number, simply type it as you would naturally, using these')
+    print('operators if necessary: (), ^, *, /, +, -')
+    print('   If you only want to convert a number, simply type that number without any operators.')
+    print('   Expressions evaluated in PEMDAS order.')
+    print('   The only current limitation is lack of support for negative input or output numbers.')
+    print('      Evaluates fractions, decimals, intermediate negative numbers, etc.')
+    print('   For bases using alphabetical digits, a = 10, b = 11 ... z = 35.')
+    print(' ')
+    print('Settings available: (/s to change)')
+    print('   /s then /1: Toggle display of base10 math alongside input and output base math.')
+    print('      Lets you look at the input / output in base10 even if not inputting / outputting base10.')
+    print('   /s then /2: Toggle large character library for outputting bases above 36, up to 112.')
+    print('      Digits are, in order: numbers, uppercase letters, lowercase letters, Greek alphabet, random symbols.') 
+    print('      Note that you can still only input bases up to 36. Mode intended for fun rather than usefulness.')
+    print(' ')
+    print('Type / to show commands:')
+    print('/: command menu, /h: view help message, /b: change bases, /s: change settings.') 
+    print('Current bases in base10: input base = %d, output base = %d'%(frombase,tobase))
+    print(' ')
+    print('Note default base settings above. /b to change.')
+    print(' ')
+    print('At any time, press "enter" to exit current dialogue.')
+    print('Type /h to view this help message again.')
+helpme()
 while True: # Main loop, always running
-    if p == 1: # If print-less mode is not enabled
-        choice = input('e: evaluate expression/num, b: change base, s: settings. Current bases in base10: input base = %d, output base = %d\n'%(frombase,tobase)) # Main menu
-    else: # If print-less mode is enabled
-        choice = input('') # Print nothing
-    if choice == 'e': # If evaulate expression is selected
+    choice = input('> ').lower().replace(" ", "")
+    #choice = input('/b: change bases, /s: settings, /p: turn on or off "printless" mode. Current bases in base10: input base = %d, output base = %d\n'%(frombase,tobase)).replace(" ", "") # Main menu
+    if len(choice) == 0 or choice[0] != '/': # If setting is not selected
         try: # Assume expression is entered sensibly / can be evaluated
-           eq() # Evaluate expression and return result
+           eq(choice) # Evaluate expression and return result
         except Exception as e: # If there is an error with entered expression
-            print('Invalid expression entered, try again. Possible causes: negative numbers in input or output, overflow, invalid operator syntax')
-    elif choice == 'b': # If user wants to change bases
-       basechange()
-    elif choice == 's': # If user wants to change settings
-        print('1: toggle simultaneous base10 display of all math and numbers.                      Currently:', base10disp)
-        print('2: toggle size of character library between 36 and 112, for outputting large bases. Currently:', bigcharlib)
-        choice = str(input("")) 
-        if choice == '1': # If user wants to enable/disable base10 display of math, flip value
-            if base10disp == 'OFF':
-                base10disp = 'ON'
+            print('Invalid expression entered, try again. Possible causes: no input, negative numbers in input or output, overflow, invalid operator syntax.')
+            print('Enter / to change bases or settings.')
+    elif choice[0] == '/':
+        if len(choice) == 1:
+            print('/: command menu, /h: view help message, /b: change bases, /s: settings.')
+            print('Current bases in base10: input base = %d, output base = %d'%(frombase,tobase))
+        elif choice[1] == 'h':
+            helpme()
+        elif choice == '/b': # If user wants to change bases
+            basechange()
+            print('Current bases in base10: input base = %d, output base = %d'%(frombase,tobase))
+        elif choice == '/s': # If user wants to change settings
+            print('Type /n to toggle setting.')
+            print('/1: Toggle simultaneous base10 display of all math and numbers.   Currently:', base10disp)
+            print('/2: Toggle maximum output base between 36 and 112. Info in /h.    Currently:', bigcharlib)
+            choice = str(input("/1 or /2 > ").replace(" ", "")) 
+            if choice == '/1' or choice == '1': # If user wants to enable/disable base10 display of math, flip value
+                if base10disp == 'OFF':
+                    base10disp = 'ON'
+                else:
+                    base10disp = 'OFF'
+                print('Base10 Display: ',base10disp)
+            elif choice == '/2' or choice == '2': # If user wants to toggle size of character library, flip value and reassign size of digit library
+                if bigcharlib == '36':
+                    bigcharlib = '112'
+                    digequiv = lib1 + lib2 + lib3 + lib4 + lib6
+                    print('Max Output Base: 112')
+                else:
+                    bigcharlib = '36'
+                    digequiv = lib1 + lib2
+                    if tobase > 36: # If output base was set higher than 36, reset back down to 36
+                        tobase = 36
+                    print('Max Output Base: 36')
             else:
-                base10disp = 'OFF'
-        elif choice == '2': # If user wants to toggle size of character library, flip value and reassign size of digit library
-            if bigcharlib == 'B36':
-                bigcharlib = 'B112'
-                digequiv = lib1 + lib2 + lib3 + lib4 + lib6
-            else:
-                bigcharlib = 'B36'
-                digequiv = lib1 + lib2
-                if tobase > 36: # If output base was set higher than 36, reset back down to 36
-                    tobase = 36
+                print('Invalid choice. Need to enter /1 or /2.') # Input was not 1 or 2
+                print('/h: view help message, /b: change bases, /s: settings.')
+                print('Current bases in base10: input base = %d, output base = %d\n'%(frombase,tobase))
         else:
-            print('Invalid choice') # Input was not 1 or 2
-    elif choice == 'p': # If user wants to toggle hidden less-prints mode, flip value, and clear screen if enabling mode
-        if p == 0:
-            p = 1
-        else:
-            p = 0
-            os.system('cls')
-    else:
-        print('Only <e> <b> <s> are recognized commands\n') # Input was not e, b, s, or p
-        
+            print('Invalid choice. Need to enter a numerical expression or number (without / at start), or command. Commands:')
+            print('/: command menu, /h: view help message, /b: change bases, /s: settings.') 
+            print('Current bases in base10: input base = %d, output base = %d\n'%(frombase,tobase))
